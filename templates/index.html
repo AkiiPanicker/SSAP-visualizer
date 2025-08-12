@@ -3,71 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Graph Algorithm Visualizer</title>
+    <title>Definitive Graph Algorithm Visualizer</title>
+    <!-- Using a modern, clean font from Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <!-- Link to our custom stylesheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- The core Vis.js library, required for the graph visualization -->
     <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 </head>
 <body>
     <header>
         <h1>Graph Algorithm Visualizer</h1>
-        <p>An interactive tool for learning shortest path algorithms</p>
+        <p>An interactive educational tool for exploring shortest path algorithms</p>
     </header>
 
     <div class="main-container">
-        <!-- Control Panel -->
+        <!-- ================================================================= -->
+        <!-- CONTROL PANEL (LEFT SIDE)                                         -->
+        <!-- ================================================================= -->
         <div class="panel" id="controls-panel">
             <h2>Controls</h2>
+            
+            <!-- Algorithm Selection -->
             <div class="control-group">
+                <h3>1. Select Algorithm</h3>
                 <label for="algo-select">Algorithm:</label>
                 <select id="algo-select">
                     <option value="dijkstra">Dijkstra</option>
                     <option value="a_star">A* Search</option>
-                    <option value="bellman_ford">Bellman-Ford</option>
+                    <option value="bellman_ford">Bellman-Ford (Allows Negative Weights)</option>
                     <option value="bidirectional">Bidirectional Dijkstra</option>
                 </select>
             </div>
             
+            <!-- Graph Generation -->
             <div class="control-group">
-                <h3>Graph Generation</h3>
+                <h3>2. Create Graph</h3>
+                <label for="node-count-input">Number of Nodes:</label>
+                <input type="number" id="node-count-input" value="8" min="1" max="50">
                 <button id="random-btn">Generate Random Graph</button>
-                <button id="clear-btn">Clear Canvas</button>
-            </div>
-
-            <div class="control-group">
-                <h3>Edit Mode</h3>
-                <button id="add-node-btn">Add Node</button>
-                <button id="add-edge-btn">Add Edge</button>
-                <span class="edit-mode-status"></span>
+                <button id="clear-btn">Clear &amp; Build Manually</button>
             </div>
             
+            <!-- Simulation Controls -->
             <div class="control-group">
-                <h3>Simulation</h3>
-                <button id="start-btn" class="start-button">START</button>
+                <h3>3. Run Simulation</h3>
+                <p class="control-subtext">Set Start/End nodes by clicking on the graph.</p>
+                <button id="start-btn" class="start-button">START VISUALIZATION</button>
                 <button id="reset-btn">Reset Animation</button>
-                <label for="speed-slider">Speed:</label>
-                <input type="range" id="speed-slider" min="50" max="1000" value="300" step="50">
+                <label for="speed-slider">Animation Speed:</label>
+                <input type="range" id="speed-slider" min="50" max="1000" value="400" step="50">
             </div>
 
+            <!-- Contextual Node Editor (Initially Hidden) -->
             <div class="control-group node-info-section" id="node-editor" style="display: none;">
                 <h3>Edit Node <span id="selected-node-id"></span></h3>
-                <button id="set-start-btn">Set as Start</button>
-                <button id="set-end-btn">Set as End</button>
+                <button id="set-start-btn">Set as Start Node</button>
+                <button id="set-end-btn">Set as End Node</button>
                 <button id="delete-node-btn" class="danger">Delete Node</button>
+                <hr>
+                <h4>Connections</h4>
+                <p class="control-subtext">Toggle checkboxes to manage edges. Double-click an edge on the graph to change its weight.</p>
+                <div id="connections-list" class="connections-list-container">
+                    <!-- Dynamic Connection UI will be built here by main.js -->
+                </div>
             </div>
             
+            <!-- Log Box for status messages -->
             <div id="log" class="log-box">
-                <p>Welcome! Select an algorithm and click START.</p>
+                <!-- Log messages will be dynamically inserted here -->
             </div>
-
         </div>
 
-        <!-- Graph Canvas -->
+        <!-- ================================================================= -->
+        <!-- CANVAS (CENTER) for the Vis.js network                            -->
+        <!-- ================================================================= -->
         <div class="canvas-container">
             <div id="mynetwork"></div>
         </div>
 
-        <!-- Information Panel -->
+        <!-- ================================================================= -->
+        <!-- INFO PANEL (RIGHT SIDE) with tabbed navigation                    -->
+        <!-- ================================================================= -->
         <div class="panel" id="info-panel">
             <div class="tab-buttons">
                 <button class="tab-link active" data-tab="iterative-table-container">Live Data</button>
@@ -76,7 +93,8 @@
             </div>
 
             <div id="iterative-table-container" class="tab-content active">
-                <h3>Live Algorithm Data</h3>
+                <h3>Shortest Distances from Source</h3>
+                <p class="info-subtext">This table shows the best-known distance from the start node to all other nodes as the algorithm runs.</p>
                 <div class="table-wrapper">
                     <table id="iterative-table">
                         <thead></thead>
@@ -87,29 +105,45 @@
 
             <div id="results-container" class="tab-content">
                 <h3>Final Results</h3>
-                <p id="final-path">Path: -</p>
-                <p id="final-cost">Total Cost: -</p>
-                <p id="nodes-visited">Nodes Visited: -</p>
+                <p><strong>Path to Destination:</strong> <span id="final-path">-</span></p>
+                <p><strong>Cost to Destination:</strong> <span id="final-cost">-</span></p>
+                <p><strong>Total Nodes Visited:</strong> <span id="nodes-visited">-</span></p>
                 <hr>
-                <h4>Comparison Table</h4>
+                <h4>Comparison Log</h4>
                 <div class="table-wrapper">
                     <table id="comparison-table">
                         <thead>
-                            <tr>
-                                <th>Algorithm</th><th>Cost</th><th>Nodes Visited</th><th>Path Found?</th>
-                            </tr>
+                            <tr><th>Algorithm</th><th>Cost</th><th>Nodes Visited</th><th>Path Found?</th></tr>
                         </thead>
-                        <tbody></tbody>
+                        <tbody>
+                            <!-- Comparison data inserted by main.js -->
+                        </tbody>
                     </table>
                 </div>
             </div>
 
             <div id="explanation-container" class="tab-content">
-                <!-- Explanations will be injected here by JS -->
+                <!-- Explanation text injected by main.js -->
             </div>
         </div>
     </div>
     
+    <!-- ================================================================= -->
+    <!-- MODAL for weight input (Initially Hidden)                       -->
+    <!-- ================================================================= -->
+    <div id="weight-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Set Edge Weight</h3>
+            <p class="modal-subtext">You can enter a negative number.</p>
+            <input type="number" id="weight-input" step="1" autofocus>
+            <div class="modal-buttons">
+                <button id="modal-ok-btn" class="start-button">OK</button>
+                <button id="modal-cancel-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Link to our main JavaScript file at the end of the body -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
